@@ -1,0 +1,30 @@
+---
+import Analytics from '@vercel/analytics/astro';
+
+interface Props {
+  title?: string;
+}
+
+const {
+  title = 'QV Notenrechner | Informatiker EFZ (BiVo 2021)',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <slot />
+    <script src="/app.js" defer></script>
+    <Analytics />
+  </body>
+</html>

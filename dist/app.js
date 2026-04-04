@@ -98,6 +98,7 @@ function computeEgk() {
   if (schnittRaw === null) {
     return null;
   }
+
   return roundToHalf(schnittRaw);
 }
 
@@ -118,6 +119,7 @@ function computeTotal(isBmMode, ipa, ik, egk, abu) {
     if (ipa === null || ik === null) {
       return null;
     }
+
     return roundToTenth(ipa * (4 / 7) + ik * (3 / 7));
   }
 
@@ -137,6 +139,7 @@ function getRiskState(total, ipa, ik) {
     if (ipa < 3.8 || ik < 3.8 || total < 3.8) {
       return { label: 'Failing', cls: 'risk-failing' };
     }
+
     return { label: 'Risky', cls: 'risk-risky' };
   }
 
@@ -231,6 +234,7 @@ function resetAll() {
     inputEl.value = '';
     inputEl.classList.remove('invalid');
   });
+
   ui.bmToggle.checked = false;
   recalculate();
 }
