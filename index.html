@@ -3,840 +3,294 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QV Notenrechner – Informatiker/in EFZ</title>
+    <title>QV Notenrechner | Informatiker EFZ (BiVo 2021)</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <style>
-      :root {
-        --bg: #0e0f13;
-        --surface: #16181f;
-        --surface2: #1e2029;
-        --border: #2a2d38;
-        --accent: #e8453c;
-        --accent2: #ff7c45;
-        --text: #eaedf5;
-        --muted: #6b6f80;
-        --green: #3ecf8e;
-        --yellow: #f5c842;
-        --radius: 12px;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: 'Syne', sans-serif;
-        min-height: 100vh;
-        padding: 2rem 1rem 4rem;
-      }
-
-      body::before {
-        content: '';
-        position: fixed;
-        top: -200px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 700px;
-        height: 700px;
-        background: radial-gradient(
-          ellipse at center,
-          rgba(232, 69, 60, 0.08) 0%,
-          transparent 70%
-        );
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      .container {
-        max-width: 720px;
-        margin: 0 auto;
-        position: relative;
-        z-index: 1;
-      }
-
-      header {
-        margin-bottom: 2.5rem;
-      }
-
-      .label-tag {
-        display: inline-block;
-        font-family: 'DM Mono', monospace;
-        font-size: 0.65rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--accent);
-        background: rgba(232, 69, 60, 0.12);
-        border: 1px solid rgba(232, 69, 60, 0.25);
-        padding: 3px 10px;
-        border-radius: 4px;
-        margin-bottom: 0.75rem;
-      }
-
-      h1 {
-        font-size: clamp(1.6rem, 4vw, 2.4rem);
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-      }
-
-      h1 span {
-        color: var(--accent);
-      }
-
-      .subtitle {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.78rem;
-        color: var(--muted);
-        margin-top: 0.5rem;
-        letter-spacing: 0.05em;
-      }
-
-      /* BM Toggle */
-      .bm-toggle-wrap {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1rem 1.25rem;
-        margin-bottom: 2rem;
-      }
-
-      .toggle-label {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--muted);
-        transition: color 0.2s;
-        flex: 1;
-      }
-      .toggle-label.active {
-        color: var(--text);
-      }
-
-      .toggle-switch {
-        position: relative;
-        width: 52px;
-        height: 28px;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
-      .toggle-switch input {
-        display: none;
-      }
-      .toggle-track {
-        position: absolute;
-        inset: 0;
-        background: var(--border);
-        border-radius: 999px;
-        transition: background 0.25s;
-      }
-      .toggle-switch input:checked + .toggle-track {
-        background: var(--accent);
-      }
-      .toggle-knob {
-        position: absolute;
-        top: 4px;
-        left: 4px;
-        width: 20px;
-        height: 20px;
-        background: #fff;
-        border-radius: 50%;
-        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-      }
-      .toggle-switch input:checked ~ .toggle-knob {
-        transform: translateX(24px);
-      }
-      .bm-badge {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.7rem;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background: rgba(232, 69, 60, 0.15);
-        color: var(--accent);
-        border: 1px solid rgba(232, 69, 60, 0.3);
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-      .bm-badge.visible {
-        opacity: 1;
-      }
-
-      /* Sections */
-      .section {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        margin-bottom: 1.25rem;
-        overflow: hidden;
-        transition: border-color 0.3s;
-      }
-      .section:focus-within {
-        border-color: rgba(232, 69, 60, 0.4);
-      }
-
-      .section-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.9rem 1.25rem;
-        background: var(--surface2);
-        border-bottom: 1px solid var(--border);
-      }
-
-      .section-title {
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        flex: 1;
-      }
-
-      .weight-pill {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.72rem;
-        color: var(--accent2);
-        background: rgba(255, 124, 69, 0.12);
-        border: 1px solid rgba(255, 124, 69, 0.2);
-        padding: 2px 9px;
-        border-radius: 5px;
-      }
-
-      .note-display {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--green);
-        min-width: 42px;
-        text-align: right;
-      }
-
-      .section-body {
-        padding: 1rem 1.25rem;
-      }
-
-      .row {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.4rem 0;
-      }
-
-      .row + .row {
-        border-top: 1px solid var(--border);
-      }
-
-      .row-label {
-        font-size: 0.82rem;
-        color: var(--muted);
-      }
-
-      .row-hint {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.68rem;
-        color: var(--border);
-        white-space: nowrap;
-      }
-
-      input[type='number'] {
-        width: 72px;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        color: var(--text);
-        font-family: 'DM Mono', monospace;
-        font-size: 0.9rem;
-        padding: 5px 8px;
-        text-align: center;
-        outline: none;
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-        -moz-appearance: textfield;
-      }
-      input[type='number']::-webkit-outer-spin-button,
-      input[type='number']::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-      }
-      input[type='number']:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(232, 69, 60, 0.15);
-      }
-      input[type='number'].invalid {
-        border-color: var(--accent);
-        background: rgba(232, 69, 60, 0.07);
-      }
-
-      .sub-group {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 0.6rem 0.9rem;
-        margin-bottom: 0.75rem;
-      }
-      .sub-group-title {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        margin-bottom: 0.5rem;
-      }
-
-      .divider {
-        height: 1px;
-        background: var(--border);
-        margin: 0.75rem 0;
-      }
-
-      /* Result */
-      .result-panel {
-        background: linear-gradient(
-          135deg,
-          var(--surface) 0%,
-          rgba(30, 32, 41, 0.8) 100%
-        );
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1.5rem 1.5rem 1.25rem;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .result-panel::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, var(--accent), var(--accent2));
-      }
-
-      .result-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-      }
-
-      .result-card {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        padding: 0.75rem 1rem;
-      }
-
-      .result-card-label {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted);
-        margin-bottom: 0.35rem;
-      }
-
-      .result-card-value {
-        font-family: 'DM Mono', monospace;
-        font-size: 1.3rem;
-        font-weight: 500;
-        color: var(--green);
-      }
-      .result-card-value.warn {
-        color: var(--yellow);
-      }
-      .result-card-value.fail {
-        color: var(--accent);
-      }
-
-      .total-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border);
-      }
-
-      .total-label {
-        font-size: 0.9rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-      }
-
-      .total-value {
-        font-family: 'DM Mono', monospace;
-        font-size: 2.2rem;
-        font-weight: 500;
-        color: var(--green);
-        transition: color 0.3s;
-      }
-      .total-value.warn {
-        color: var(--yellow);
-      }
-      .total-value.fail {
-        color: var(--accent);
-      }
-
-      .pass-badge {
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        padding: 4px 12px;
-        border-radius: 5px;
-        background: rgba(62, 207, 142, 0.15);
-        color: var(--green);
-        border: 1px solid rgba(62, 207, 142, 0.3);
-      }
-      .pass-badge.warn {
-        background: rgba(245, 200, 66, 0.15);
-        color: var(--yellow);
-        border-color: rgba(245, 200, 66, 0.3);
-      }
-      .pass-badge.fail {
-        background: rgba(232, 69, 60, 0.15);
-        color: var(--accent);
-        border-color: rgba(232, 69, 60, 0.3);
-      }
-
-      .formula-hint {
-        font-family: 'DM Mono', monospace;
-        font-size: 0.7rem;
-        color: var(--muted);
-        margin-top: 0.75rem;
-        line-height: 1.6;
-      }
-
-      /* Hidden sections for BM */
-      .bm-hidden {
-        display: none;
-      }
-
-      .fade-in {
-        animation: fadeSlide 0.3s ease forwards;
-      }
-      @keyframes fadeSlide {
-        from {
-          opacity: 0;
-          transform: translateY(6px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @media (max-width: 500px) {
-        .row {
-          grid-template-columns: 1fr auto;
-        }
-        .row-hint {
-          display: none;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="container">
-      <header>
-        <div class="label-tag">BiVo 2021 · Kanton Baselland</div>
-        <h1>QV Noten<span>rechner</span></h1>
-        <p class="subtitle">Informatiker/in EFZ — Abschlussnote Berechnung</p>
-      </header>
+    <main class="mx-auto max-w-app stack-xl">
+      <section class="glass-card header">
+        <span class="badge">BiVo 2021 · Informatiker EFZ</span>
+        <h1>QV Notenrechner <span class="accent">IPA + IK</span></h1>
+        <p class="subtitle">Schnelle, klare Schätzung deiner Abschlussnote.</p>
+        <p class="trust-note">This is an estimation based on your input.</p>
+      </section>
 
-      <!-- BM Toggle -->
-      <div class="bm-toggle-wrap">
-        <span class="toggle-label" id="lbl-no-bm">Ohne Berufsmaturität</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="bm-toggle" />
-          <div class="toggle-track"></div>
-          <div class="toggle-knob"></div>
-        </label>
-        <span class="toggle-label" id="lbl-bm">Mit BM</span>
-        <span class="bm-badge" id="bm-badge">BM aktiv</span>
-      </div>
+      <section class="glass-card toolbar" aria-label="Steuerung">
+        <div class="bm-wrap">
+          <span id="labelNoBm" class="bm-label active">Ohne BM</span>
+          <label class="switch" for="bmToggle">
+            <input type="checkbox" id="bmToggle" />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+          <span id="labelBm" class="bm-label">Mit BM</span>
+        </div>
+        <button id="resetBtn" class="btn-reset" type="button">
+          Eingaben zurücksetzen
+        </button>
+      </section>
 
-      <!-- IPA -->
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">IPA – Individuelle Praktische Arbeit</div>
-          <div class="weight-pill" id="ipa-weight-label">40%</div>
-          <div class="note-display" id="ipa-total-display">—</div>
-        </div>
-        <div class="section-body">
-          <div class="row">
-            <span class="row-label">Resultat der Arbeit (50%)</span>
-            <span class="row-hint">±0.5</span>
-            <input
-              type="number"
-              id="ipa-arbeit"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
-          </div>
-          <div class="row">
-            <span class="row-label">Dokumentation (25%)</span>
-            <span class="row-hint">±0.5</span>
-            <input
-              type="number"
-              id="ipa-dok"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
-          </div>
-          <div class="row">
-            <span class="row-label">Fachgespräch / Präsentation (25%)</span>
-            <span class="row-hint">±0.5</span>
-            <input
-              type="number"
-              id="ipa-fach"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
-          </div>
-        </div>
-      </div>
+      <section class="layout" aria-label="Notenformular und Resultat">
+        <div class="sections stack-lg">
+          <article class="section" id="sectionIpa">
+            <div class="section-head">
+              <h2 class="section-title">
+                IPA · Individuelle Praktische Arbeit
+              </h2>
+              <div class="section-meta">
+                <span class="pill" id="ipaWeight">40%</span>
+                <span class="section-grade" id="ipaGrade">-</span>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="field-row">
+                <label class="field-label" for="ipaArbeit">
+                  Resultat der Arbeit
+                  <span class="field-hint"
+                    >Gewichtung 50% · Eingabe 1.0 bis 6.0</span
+                  >
+                </label>
+                <input
+                  class="input-grade"
+                  id="ipaArbeit"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="ipaDok">
+                  Dokumentation
+                  <span class="field-hint">Gewichtung 25%</span>
+                </label>
+                <input
+                  class="input-grade"
+                  id="ipaDok"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="ipaFach">
+                  Fachgespräch / Präsentation
+                  <span class="field-hint">Gewichtung 25%</span>
+                </label>
+                <input
+                  class="input-grade"
+                  id="ipaFach"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+            </div>
+          </article>
 
-      <!-- IK -->
-      <div class="section" id="section-ik">
-        <div class="section-header">
-          <div class="section-title">IK – Informatikkompetenzen</div>
-          <div class="weight-pill">30%</div>
-          <div class="note-display" id="ik-total-display">—</div>
+          <article class="section" id="sectionIk">
+            <div class="section-head">
+              <h2 class="section-title">IK · Informatikkompetenzen</h2>
+              <div class="section-meta">
+                <span class="pill" id="ikWeight">30%</span>
+                <span class="section-grade" id="ikGrade">-</span>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="field-row">
+                <label class="field-label" for="ikBfs">
+                  BFS Durchschnitt
+                  <span class="field-hint"
+                    >Gewichtung 80% · Erfahrungsnote auf 0.5</span
+                  >
+                </label>
+                <input
+                  class="input-grade"
+                  id="ikBfs"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="ikUek">
+                  ÜK Durchschnitt
+                  <span class="field-hint"
+                    >Gewichtung 20% · Erfahrungsnote auf 0.5</span
+                  >
+                </label>
+                <input
+                  class="input-grade"
+                  id="ikUek"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+            </div>
+          </article>
+
+          <article class="section" id="sectionEgk">
+            <div class="section-head">
+              <h2 class="section-title">eGK · Erweiterte Grundkompetenzen</h2>
+              <div class="section-meta">
+                <span class="pill">10%</span>
+                <span class="section-grade" id="egkGrade">-</span>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="field-row">
+                <label class="field-label" for="egkSchnitt">
+                  Durchschnitt Mathe + Englisch
+                  <span class="field-hint"
+                    >Semesterschnitt als Erfahrungsnote · auf 0.5 gerundet</span
+                  >
+                </label>
+                <input
+                  class="input-grade"
+                  id="egkSchnitt"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+            </div>
+          </article>
+
+          <article class="section" id="sectionAbu">
+            <div class="section-head">
+              <h2 class="section-title">ABU · Allgemeinbildung</h2>
+              <div class="section-meta">
+                <span class="pill">20%</span>
+                <span class="section-grade" id="abuGrade">-</span>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="field-row">
+                <label class="field-label" for="abuErfa">
+                  Erfa Note
+                  <span class="field-hint"
+                    >Teil von (Erfa + VA + Schluss) / 3</span
+                  >
+                </label>
+                <input
+                  class="input-grade"
+                  id="abuErfa"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="abuVa">
+                  Vertiefungsarbeit (VA)
+                  <span class="field-hint">Kein Zwischenschritt gerundet</span>
+                </label>
+                <input
+                  class="input-grade"
+                  id="abuVa"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="abuSchluss">
+                  Schlussprüfung
+                  <span class="field-hint"
+                    >Nur Endresultat auf 0.1 gerundet</span
+                  >
+                </label>
+                <input
+                  class="input-grade"
+                  id="abuSchluss"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="5.0"
+                />
+              </div>
+            </div>
+          </article>
         </div>
-        <div class="section-body">
-          <div class="sub-group">
-            <div class="sub-group-title">Berufsfachschule (Bfs) → 80%</div>
-            <div class="row">
-              <span class="row-label"
-                >Module 1.–4. Lehrjahr (Durchschnitt)</span
-              >
-              <span class="row-hint">±0.5</span>
-              <input
-                type="number"
-                id="ik-bfs"
-                min="1"
-                max="6"
-                step="0.1"
-                placeholder="5.0"
-              />
+
+        <aside class="result" aria-live="polite">
+          <div class="result-top">
+            <span class="result-label">Abschlussnote</span>
+            <span class="risk-chip risk-pending" id="riskBadge">Pending</span>
+          </div>
+
+          <div class="grade-big" id="totalGrade">-</div>
+          <div class="pass-banner pass-no" id="passBanner">Eingaben fehlen</div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="mini-label">IPA</div>
+              <div class="mini-value" id="miniIpa">-</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">IK</div>
+              <div class="mini-value" id="miniIk">-</div>
+            </div>
+            <div class="mini-card" id="miniEgkCard">
+              <div class="mini-label">eGK</div>
+              <div class="mini-value" id="miniEgk">-</div>
+            </div>
+            <div class="mini-card" id="miniAbuCard">
+              <div class="mini-label">ABU</div>
+              <div class="mini-value" id="miniAbu">-</div>
             </div>
           </div>
-          <div class="sub-group">
-            <div class="sub-group-title">Überbetriebliche Kurse (ÜK) → 20%</div>
-            <div class="row">
-              <span class="row-label"
-                >Module 1.–2. Lehrjahr (Durchschnitt)</span
-              >
-              <span class="row-hint">±0.5</span>
-              <input
-                type="number"
-                id="ik-uek"
-                min="1"
-                max="6"
-                step="0.1"
-                placeholder="5.0"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- eGK – nur ohne BM -->
-      <div class="section" id="section-egk">
-        <div class="section-header">
-          <div class="section-title">eGK – Erweiterte Grundkompetenzen</div>
-          <div class="weight-pill">10%</div>
-          <div class="note-display" id="egk-total-display">—</div>
-        </div>
-        <div class="section-body">
-          <p
-            style="
-              font-size: 0.78rem;
-              color: var(--muted);
-              margin-bottom: 0.75rem;
-              font-family: 'DM Mono', monospace;
-            "
-          >
-            Durchschnitt aller 8 Semesterschnitte von Mathematik &amp; Englisch
-            zusammen, gerundet auf 1/10
-          </p>
-          <div class="row">
-            <span class="row-label"
-              >Ø aller Semesterschnitte (Mathe &amp; Englisch)</span
-            >
-            <span class="row-hint">±0.1</span>
-            <input
-              type="number"
-              id="egk-schnitt"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
+          <div class="formula" id="formulaText">
+            Formel: IPA×0.4 + IK×0.3 + eGK×0.1 + ABU×0.2
           </div>
-        </div>
-      </div>
+          <div class="rounding-note">
+            Rundung: IPA-, IK- und eGK-Erfahrungsnoten auf 0.5. IPA-, IK- und
+            ABU-Gesamtnote auf 0.1. Abschlussnote auf 0.1.
+          </div>
+        </aside>
+      </section>
+    </main>
 
-      <!-- ABU – nur ohne BM -->
-      <div class="section" id="section-abu">
-        <div class="section-header">
-          <div class="section-title">ABU – Allgemeinbildung</div>
-          <div class="weight-pill">20%</div>
-          <div class="note-display" id="abu-total-display">—</div>
-        </div>
-        <div class="section-body">
-          <div class="row">
-            <span class="row-label">Erfa Note ABU (1/3)</span>
-            <span class="row-hint">wie erhalten</span>
-            <input
-              type="number"
-              id="abu-erfa"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
-          </div>
-          <div class="row">
-            <span class="row-label">Vertiefungsarbeit VA (1/3)</span>
-            <span class="row-hint">wie erhalten</span>
-            <input
-              type="number"
-              id="abu-va"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
-          </div>
-          <div class="row">
-            <span class="row-label">Note Schlussprüfung (1/3)</span>
-            <span class="row-hint">wie erhalten</span>
-            <input
-              type="number"
-              id="abu-schluss"
-              min="1"
-              max="6"
-              step="0.1"
-              placeholder="5.0"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Result -->
-      <div class="result-panel">
-        <div class="result-grid" id="result-grid">
-          <div class="result-card">
-            <div class="result-card-label">Note IPA</div>
-            <div class="result-card-value" id="res-ipa">—</div>
-          </div>
-          <div class="result-card">
-            <div class="result-card-label">Note IK</div>
-            <div class="result-card-value" id="res-ik">—</div>
-          </div>
-          <div class="result-card" id="card-egk">
-            <div class="result-card-label">Note eGK</div>
-            <div class="result-card-value" id="res-egk">—</div>
-          </div>
-          <div class="result-card" id="card-abu">
-            <div class="result-card-label">Note ABU</div>
-            <div class="result-card-value" id="res-abu">—</div>
-          </div>
-        </div>
-        <div class="total-row">
-          <div>
-            <div class="total-label">Abschlussnote</div>
-            <div class="formula-hint" id="formula-hint">
-              IPA×0.4 + IK×0.3 + eGK×0.1 + ABU×0.2
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 0.75rem">
-            <span class="pass-badge" id="pass-badge">—</span>
-            <div class="total-value" id="total-value">—</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <script src="app.js"></script>
     <script>
-      const bmToggle = document.getElementById('bm-toggle');
-      const bmBadge = document.getElementById('bm-badge');
-      const lblNoBm = document.getElementById('lbl-no-bm');
-      const lblBm = document.getElementById('lbl-bm');
-
-      // Rounding helpers
-      function roundTenth(v) {
-        return Math.round(v * 10) / 10;
-      }
-      function clamp(v) {
-        return Math.min(6, Math.max(1, v));
-      }
-
-      function val(id) {
-        const v = parseFloat(document.getElementById(id).value);
-        return isNaN(v) ? null : clamp(v);
-      }
-
-      function setDisplay(id, v, decimals = 1) {
-        const el = document.getElementById(id);
-        el.textContent = v !== null ? v.toFixed(decimals) : '—';
-      }
-
-      function applyColor(el, v) {
-        el.classList.remove('warn', 'fail');
-        if (v !== null && v < 4.0) el.classList.add(v < 3.5 ? 'fail' : 'warn');
-      }
-
-      function calculate() {
-        const bm = bmToggle.checked;
-
-        // IPA – Gesamtnote auf 1/10 gerundet
-        const ipaA = val('ipa-arbeit');
-        const ipaD = val('ipa-dok');
-        const ipaF = val('ipa-fach');
-        let ipaNota = null;
-        if (ipaA !== null && ipaD !== null && ipaF !== null) {
-          ipaNota = roundTenth(ipaA * 0.5 + ipaD * 0.25 + ipaF * 0.25);
-        }
-        setDisplay('ipa-total-display', ipaNota);
-        setDisplay('res-ipa', ipaNota);
-        applyColor(document.getElementById('res-ipa'), ipaNota);
-
-        // IK – Gesamtnote auf 1/10 gerundet
-        const ikBfs = val('ik-bfs');
-        const ikUek = val('ik-uek');
-        let ikNota = null;
-        if (ikBfs !== null && ikUek !== null) {
-          ikNota = roundTenth(ikBfs * 0.8 + ikUek * 0.2);
-        }
-        setDisplay('ik-total-display', ikNota);
-        setDisplay('res-ik', ikNota);
-        applyColor(document.getElementById('res-ik'), ikNota);
-
-        let total = null;
-
-        if (bm) {
-          // BM: nur IPA (4/7 ≈ 57.14%) + IK (3/7 ≈ 42.86%)
-          document.getElementById('card-egk').style.display = 'none';
-          document.getElementById('card-abu').style.display = 'none';
-          if (ipaNota !== null && ikNota !== null) {
-            total = roundTenth(ipaNota * (4 / 7) + ikNota * (3 / 7));
-          }
-        } else {
-          document.getElementById('card-egk').style.display = '';
-          document.getElementById('card-abu').style.display = '';
-
-          // eGK – ein Wert (Ø aller 8 Semesterschnitte), auf 1/10 gerundet
-          const egkS = val('egk-schnitt');
-          let egkNota = null;
-          if (egkS !== null) {
-            egkNota = roundTenth(egkS);
-          }
-          setDisplay('egk-total-display', egkNota);
-          setDisplay('res-egk', egkNota);
-          applyColor(document.getElementById('res-egk'), egkNota);
-
-          // ABU – Einzelnoten NICHT runden, nur Endnote auf 1/10
-          const abuE = val('abu-erfa');
-          const abuV = val('abu-va');
-          const abuS = val('abu-schluss');
-          let abuNota = null;
-          if (abuE !== null && abuV !== null && abuS !== null) {
-            abuNota = roundTenth((abuE + abuV + abuS) / 3);
-          }
-          setDisplay('abu-total-display', abuNota);
-          setDisplay('res-abu', abuNota);
-          applyColor(document.getElementById('res-abu'), abuNota);
-
-          if (
-            ipaNota !== null &&
-            ikNota !== null &&
-            egkNota !== null &&
-            abuNota !== null
-          ) {
-            total = roundTenth(
-              ipaNota * 0.4 + ikNota * 0.3 + egkNota * 0.1 + abuNota * 0.2,
-            );
-          }
-        }
-
-        // IPA minimum check
-        const ipaMin = ipaNota !== null && ipaNota < 4.0;
-
-        const totalEl = document.getElementById('total-value');
-        const badgeEl = document.getElementById('pass-badge');
-
-        if (total !== null) {
-          totalEl.textContent = total.toFixed(1);
-          applyColor(totalEl, total);
-
-          if (ipaMin) {
-            badgeEl.textContent = 'IPA < 4.0!';
-            badgeEl.className = 'pass-badge fail';
-          } else if (total >= 4.0) {
-            badgeEl.textContent = 'Bestanden';
-            badgeEl.className = 'pass-badge';
-          } else {
-            badgeEl.textContent = 'Nicht bestanden';
-            badgeEl.className = 'pass-badge fail';
-          }
-        } else {
-          totalEl.textContent = '—';
-          totalEl.className = 'total-value';
-          badgeEl.textContent = '—';
-          badgeEl.className = 'pass-badge';
-        }
-      }
-
-      function updateBmLayout() {
-        const bm = bmToggle.checked;
-
-        document.getElementById('section-egk').style.display = bm ? 'none' : '';
-        document.getElementById('section-abu').style.display = bm ? 'none' : '';
-
-        lblNoBm.classList.toggle('active', !bm);
-        lblBm.classList.toggle('active', bm);
-        bmBadge.classList.toggle('visible', bm);
-
-        const hint = document.getElementById('formula-hint');
-        hint.textContent = bm
-          ? 'IPA×57.14% + IK×42.86%  (BM-Schlüssel)'
-          : 'IPA×40% + IK×30% + eGK×10% + ABU×20%';
-
-        document.getElementById('ipa-weight-label').textContent = bm
-          ? '57%'
-          : '40%';
-
-        calculate();
-      }
-
-      bmToggle.addEventListener('change', updateBmLayout);
-      document.querySelectorAll('input[type="number"]').forEach((el) => {
-        el.addEventListener('input', calculate);
-      });
-
-      // Init
-      lblNoBm.classList.add('active');
-      calculate();
+      window.va =
+        window.va ||
+        function () {
+          (window.vaq = window.vaq || []).push(arguments);
+        };
     </script>
+    <script defer src="/_vercel/insights/script.js"></script>
   </body>
 </html>
+
