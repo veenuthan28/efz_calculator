@@ -76,7 +76,7 @@ function computeIpa() {
   const dok = roundToHalf(dokRaw);
   const fach = roundToHalf(fachRaw);
 
-  return roundToTenth(arbeit * 0.5 + dok * 0.25 + fach * 0.25);
+  return roundToTenth(arbeit * 0.5 + dok * 0.2 + fach * 0.3);
 }
 
 function computeIk() {

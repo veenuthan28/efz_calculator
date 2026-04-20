@@ -1,5 +1,6 @@
 ---
 import Analytics from '@vercel/analytics/astro';
+import '../styles/styles.css';
 
 interface Props {
   title?: string;
@@ -20,11 +21,10 @@ const {
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <slot />
-    <script src="/app.js" defer></script>
+    <script src="../scripts/app.js"></script>
     <Analytics />
   </body>
 </html>
