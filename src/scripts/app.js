@@ -1,14 +1,42 @@
+const STORAGE_KEY = 'efz-calculator-state-v3';
+
 const fields = {
   ipaArbeit: document.getElementById('ipaArbeit'),
   ipaDok: document.getElementById('ipaDok'),
   ipaFach: document.getElementById('ipaFach'),
-  ikBfs: document.getElementById('ikBfs'),
-  ikUek: document.getElementById('ikUek'),
-  egkSchnitt: document.getElementById('egkSchnitt'),
-  abuErfa: document.getElementById('abuErfa'),
   abuVa: document.getElementById('abuVa'),
   abuSchluss: document.getElementById('abuSchluss'),
 };
+
+const overrides = {
+  bfs: document.getElementById('bfsOverride'),
+  uek: document.getElementById('uekOverride'),
+  egk: document.getElementById('egkOverride'),
+  abuSoc: document.getElementById('abuSocOverride'),
+  abuLang: document.getElementById('abuLangOverride'),
+};
+
+const allInputs = Array.from(document.querySelectorAll('.input-grade'));
+const groupInputs = {
+  bfs: Array.from(document.querySelectorAll('[data-group="bfs"]')),
+  uek: Array.from(document.querySelectorAll('[data-group="uek"]')),
+  abuSoc: Array.from(document.querySelectorAll('[data-group="abuSoc"]')),
+  abuLang: Array.from(document.querySelectorAll('[data-group="abuLang"]')),
+};
+
+const egkSemesterConfig = [
+  { semester: 1, engId: 'egkSem1Eng', mathId: null },
+  { semester: 2, engId: 'egkSem2Eng', mathId: 'egkSem2Math' },
+  { semester: 3, engId: 'egkSem3Eng', mathId: 'egkSem3Math' },
+  { semester: 4, engId: 'egkSem4Eng', mathId: 'egkSem4Math' },
+  { semester: 5, engId: 'egkSem5Eng', mathId: null },
+  { semester: 6, engId: 'egkSem6Eng', mathId: null },
+  { semester: 7, engId: 'egkSem7Eng', mathId: null },
+].map((config) => ({
+  ...config,
+  engEl: document.getElementById(config.engId),
+  mathEl: config.mathId ? document.getElementById(config.mathId) : null,
+}));
 
 const ui = {
   bmToggle: document.getElementById('bmToggle'),
@@ -24,8 +52,14 @@ const ui = {
   totalGrade: document.getElementById('totalGrade'),
   ipaGrade: document.getElementById('ipaGrade'),
   ikGrade: document.getElementById('ikGrade'),
+  ikBfsAvg: document.getElementById('ikBfsAvg'),
+  ikUekAvg: document.getElementById('ikUekAvg'),
   egkGrade: document.getElementById('egkGrade'),
+  egkLiveAvg: document.getElementById('egkLiveAvg'),
   abuGrade: document.getElementById('abuGrade'),
+  abuSocAvg: document.getElementById('abuSocAvg'),
+  abuLangAvg: document.getElementById('abuLangAvg'),
+  abuErfaAvg: document.getElementById('abuErfaAvg'),
   miniIpa: document.getElementById('miniIpa'),
   miniIk: document.getElementById('miniIk'),
   miniEgk: document.getElementById('miniEgk'),
@@ -33,6 +67,15 @@ const ui = {
   miniEgkCard: document.getElementById('miniEgkCard'),
   miniAbuCard: document.getElementById('miniAbuCard'),
   resetBtn: document.getElementById('resetBtn'),
+  egkSemesterAvgEls: Array.from(
+    document.querySelectorAll('[data-egk-sem-avg]'),
+  ).reduce((acc, element) => {
+    const semester = Number(element.dataset.egkSemAvg);
+    if (!Number.isNaN(semester)) {
+      acc[semester] = element;
+    }
+    return acc;
+  }, {}),
 };
 
 function roundToTenth(value) {
@@ -63,71 +106,247 @@ function formatGrade(value) {
   return value === null ? '-' : value.toFixed(1);
 }
 
+function parseInput(inputEl) {
+  return {
+    value: readGrade(inputEl),
+    filled: inputEl.value !== '',
+  };
+}
+
+function averageFromValues(values) {
+  if (!values.length) {
+    return null;
+  }
+
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return total / values.length;
+}
+
+function computeGroupAverage(inputList) {
+  const parsed = inputList.map((inputEl) => parseInput(inputEl));
+  const validValues = parsed
+    .map((item) => item.value)
+    .filter((value) => value !== null);
+  const enteredCount = parsed.filter((item) => item.filled).length;
+
+  return {
+    value: averageFromValues(validValues),
+    totalCount: inputList.length,
+    enteredCount,
+    complete:
+      inputList.length > 0 &&
+      parsed.every((item) => item.filled && item.value !== null),
+  };
+}
+
+function weightedAverage(entries) {
+  const available = entries.filter((entry) => entry.value !== null);
+  if (!available.length) {
+    return { value: null, complete: false };
+  }
+
+  const weightTotal = available.reduce((sum, entry) => sum + entry.weight, 0);
+  const weightedSum = available.reduce(
+    (sum, entry) => sum + entry.value * entry.weight,
+    0,
+  );
+
+  return {
+    value: weightedSum / weightTotal,
+    complete: entries.every((entry) => entry.value !== null && entry.complete),
+  };
+}
+
 function computeIpa() {
   const arbeitRaw = readGrade(fields.ipaArbeit);
   const dokRaw = readGrade(fields.ipaDok);
   const fachRaw = readGrade(fields.ipaFach);
 
-  if (arbeitRaw === null || dokRaw === null || fachRaw === null) {
-    return null;
-  }
+  const result = weightedAverage([
+    {
+      value: arbeitRaw === null ? null : roundToHalf(arbeitRaw),
+      weight: 0.5,
+      complete: arbeitRaw !== null,
+    },
+    {
+      value: dokRaw === null ? null : roundToHalf(dokRaw),
+      weight: 0.2,
+      complete: dokRaw !== null,
+    },
+    {
+      value: fachRaw === null ? null : roundToHalf(fachRaw),
+      weight: 0.3,
+      complete: fachRaw !== null,
+    },
+  ]);
 
-  const arbeit = roundToHalf(arbeitRaw);
-  const dok = roundToHalf(dokRaw);
-  const fach = roundToHalf(fachRaw);
-
-  return roundToTenth(arbeit * 0.5 + dok * 0.2 + fach * 0.3);
+  return {
+    value: result.value === null ? null : roundToTenth(result.value),
+    complete: arbeitRaw !== null && dokRaw !== null && fachRaw !== null,
+  };
 }
 
 function computeIk() {
-  const bfsRaw = readGrade(fields.ikBfs);
-  const uekRaw = readGrade(fields.ikUek);
-
-  if (bfsRaw === null || uekRaw === null) {
-    return null;
+  let bfs;
+  let bfsComplete;
+  if (getGroupMode('bfs') === 'direct') {
+    const bfsOverride = readGrade(overrides.bfs);
+    bfs = bfsOverride === null ? null : roundToHalf(bfsOverride);
+    bfsComplete = bfsOverride !== null;
+  } else {
+    const bfsGroup = computeGroupAverage(groupInputs.bfs);
+    bfs = bfsGroup.value === null ? null : roundToHalf(bfsGroup.value);
+    bfsComplete = bfsGroup.complete;
   }
 
-  const bfs = roundToHalf(bfsRaw);
-  const uek = roundToHalf(uekRaw);
+  let uek;
+  let uekComplete;
+  if (getGroupMode('uek') === 'direct') {
+    const uekOverride = readGrade(overrides.uek);
+    uek = uekOverride === null ? null : roundToHalf(uekOverride);
+    uekComplete = uekOverride !== null;
+  } else {
+    const uekGroup = computeGroupAverage(groupInputs.uek);
+    uek = uekGroup.value === null ? null : roundToHalf(uekGroup.value);
+    uekComplete = uekGroup.complete;
+  }
 
-  return roundToTenth(bfs * 0.8 + uek * 0.2);
+  const result = weightedAverage([
+    { value: bfs, weight: 0.8, complete: bfsComplete },
+    { value: uek, weight: 0.2, complete: uekComplete },
+  ]);
+
+  return {
+    value: result.value === null ? null : roundToTenth(result.value),
+    complete: bfsComplete && uekComplete,
+    bfs,
+    uek,
+  };
 }
 
 function computeEgk() {
-  const schnittRaw = readGrade(fields.egkSchnitt);
-  if (schnittRaw === null) {
-    return null;
+  if (getGroupMode('egk') === 'direct') {
+    const egkOverride = readGrade(overrides.egk);
+    return {
+      value: egkOverride === null ? null : roundToHalf(egkOverride),
+      complete: egkOverride !== null,
+      semesters: [],
+    };
   }
 
-  return roundToHalf(schnittRaw);
+  const semesters = egkSemesterConfig.map((config) => {
+    const engRaw = readGrade(config.engEl);
+    const engRounded = engRaw === null ? null : roundToHalf(engRaw);
+    const mathRaw = config.mathEl ? readGrade(config.mathEl) : null;
+    const mathRounded = mathRaw === null ? null : roundToHalf(mathRaw);
+
+    const semesterRaw = averageFromValues(
+      [engRounded, mathRounded].filter((value) => value !== null),
+    );
+    const semesterRounded =
+      semesterRaw === null ? null : roundToHalf(semesterRaw);
+    const complete = config.mathEl
+      ? engRaw !== null && mathRaw !== null
+      : engRaw !== null;
+
+    return {
+      semester: config.semester,
+      value: semesterRounded,
+      complete,
+    };
+  });
+
+  const availableSemesters = semesters
+    .map((semester) => semester.value)
+    .filter((value) => value !== null);
+  const totalRaw = averageFromValues(availableSemesters);
+
+  return {
+    value: totalRaw === null ? null : roundToHalf(totalRaw),
+    complete: semesters.every((semester) => semester.complete),
+    semesters,
+  };
 }
 
 function computeAbu() {
-  const erfa = readGrade(fields.abuErfa);
-  const va = readGrade(fields.abuVa);
-  const schluss = readGrade(fields.abuSchluss);
-
-  if (erfa === null || va === null || schluss === null) {
-    return null;
+  let soc;
+  let socComplete;
+  if (getGroupMode('abuSoc') === 'direct') {
+    const socOverride = readGrade(overrides.abuSoc);
+    soc = socOverride === null ? null : roundToHalf(socOverride);
+    socComplete = socOverride !== null;
+  } else {
+    const socGroup = computeGroupAverage(groupInputs.abuSoc);
+    soc = socGroup.value === null ? null : roundToHalf(socGroup.value);
+    socComplete = socGroup.complete;
   }
 
-  return roundToTenth((erfa + va + schluss) / 3);
+  let lang;
+  let langComplete;
+  if (getGroupMode('abuLang') === 'direct') {
+    const langOverride = readGrade(overrides.abuLang);
+    lang = langOverride === null ? null : roundToHalf(langOverride);
+    langComplete = langOverride !== null;
+  } else {
+    const langGroup = computeGroupAverage(groupInputs.abuLang);
+    lang = langGroup.value === null ? null : roundToHalf(langGroup.value);
+    langComplete = langGroup.complete;
+  }
+
+  const erfaRaw = averageFromValues([soc, lang].filter((value) => value !== null));
+  const erfa = erfaRaw === null ? null : roundToHalf(erfaRaw);
+  const vaRaw = readGrade(fields.abuVa);
+  const schlussRaw = readGrade(fields.abuSchluss);
+  const va = vaRaw === null ? null : roundToHalf(vaRaw);
+  const schluss = schlussRaw === null ? null : roundToHalf(schlussRaw);
+
+  const totalResult = weightedAverage([
+    {
+      value: erfa,
+      weight: 1,
+      complete: socComplete && langComplete,
+    },
+    { value: va, weight: 1, complete: va !== null },
+    { value: schluss, weight: 1, complete: schluss !== null },
+  ]);
+
+  return {
+    value: totalResult.value === null ? null : roundToTenth(totalResult.value),
+    complete:
+      socComplete &&
+      langComplete &&
+      vaRaw !== null &&
+      schlussRaw !== null,
+    erfa,
+    soc,
+    lang,
+  };
 }
 
 function computeTotal(isBmMode, ipa, ik, egk, abu) {
   if (isBmMode) {
-    if (ipa === null || ik === null) {
-      return null;
-    }
+    const result = weightedAverage([
+      { value: ipa.value, weight: 4 / 7, complete: ipa.complete },
+      { value: ik.value, weight: 3 / 7, complete: ik.complete },
+    ]);
 
-    return roundToTenth(ipa * (4 / 7) + ik * (3 / 7));
+    return {
+      value: result.value === null ? null : roundToTenth(result.value),
+      complete: ipa.complete && ik.complete,
+    };
   }
 
-  if (ipa === null || ik === null || egk === null || abu === null) {
-    return null;
-  }
+  const result = weightedAverage([
+    { value: ipa.value, weight: 0.4, complete: ipa.complete },
+    { value: ik.value, weight: 0.3, complete: ik.complete },
+    { value: egk.value, weight: 0.1, complete: egk.complete },
+    { value: abu.value, weight: 0.2, complete: abu.complete },
+  ]);
 
-  return roundToTenth(ipa * 0.4 + ik * 0.3 + egk * 0.1 + abu * 0.2);
+  return {
+    value: result.value === null ? null : roundToTenth(result.value),
+    complete: ipa.complete && ik.complete && egk.complete && abu.complete,
+  };
 }
 
 function getRiskState(total, ipa, ik) {
@@ -164,32 +383,53 @@ function updateModeUi(isBmMode) {
     : 'Formel: IPA×0.4 + IK×0.3 + eGK×0.1 + ABU×0.2';
 }
 
-function updateResultUi(total, ipa, ik, egk, abu) {
-  ui.totalGrade.textContent = formatGrade(total);
-  ui.ipaGrade.textContent = formatGrade(ipa);
-  ui.ikGrade.textContent = formatGrade(ik);
-  ui.egkGrade.textContent = formatGrade(egk);
-  ui.abuGrade.textContent = formatGrade(abu);
-  ui.miniIpa.textContent = formatGrade(ipa);
-  ui.miniIk.textContent = formatGrade(ik);
-  ui.miniEgk.textContent = formatGrade(egk);
-  ui.miniAbu.textContent = formatGrade(abu);
+function updateResultUi(isBmMode, total, ipa, ik, egk, abu) {
+  ui.totalGrade.textContent = formatGrade(total.value);
+  ui.ipaGrade.textContent = formatGrade(ipa.value);
+  ui.ikGrade.textContent = formatGrade(ik.value);
+  ui.egkGrade.textContent = formatGrade(egk.value);
+  ui.abuGrade.textContent = formatGrade(abu.value);
+  ui.miniIpa.textContent = formatGrade(ipa.value);
+  ui.miniIk.textContent = formatGrade(ik.value);
+  ui.miniEgk.textContent = formatGrade(egk.value);
+  ui.miniAbu.textContent = formatGrade(abu.value);
 
-  const risk = getRiskState(total, ipa, ik);
+  ui.ikBfsAvg.textContent = formatGrade(ik.bfs);
+  ui.ikUekAvg.textContent = formatGrade(ik.uek);
+  ui.egkLiveAvg.textContent = formatGrade(egk.value);
+  egk.semesters.forEach((semester) => {
+    const outputEl = ui.egkSemesterAvgEls[semester.semester];
+    if (outputEl) {
+      outputEl.textContent = formatGrade(semester.value);
+    }
+  });
+  ui.abuSocAvg.textContent = formatGrade(abu.soc);
+  ui.abuLangAvg.textContent = formatGrade(abu.lang);
+  ui.abuErfaAvg.textContent = formatGrade(abu.erfa);
+
+  const risk = getRiskState(total.value, ipa.value, ik.value);
   ui.riskBadge.className = 'risk-chip ' + risk.cls;
   ui.riskBadge.textContent = risk.label;
 
   const hasPass =
-    total !== null &&
-    ipa !== null &&
-    ik !== null &&
-    total >= 4 &&
-    ipa >= 4 &&
-    ik >= 4;
+    total.value !== null &&
+    ipa.value !== null &&
+    ik.value !== null &&
+    total.value >= 4 &&
+    ipa.value >= 4 &&
+    ik.value >= 4;
 
-  if (total === null || ipa === null || ik === null) {
+  if (total.value === null || ipa.value === null || ik.value === null) {
     ui.passBanner.className = 'pass-banner pass-no';
     ui.passBanner.textContent = 'Eingaben fehlen';
+    return;
+  }
+
+  if (!total.complete) {
+    ui.passBanner.className = 'pass-banner pass-no';
+    ui.passBanner.textContent = isBmMode
+      ? 'Zwischenstand (BM): es fehlen noch Eingaben'
+      : 'Zwischenstand: es fehlen noch Eingaben';
     return;
   }
 
@@ -204,11 +444,14 @@ function updateResultUi(total, ipa, ik, egk, abu) {
   }
 
   const reasons = [];
-  if (ipa < 4) {
+  if (ipa.value < 4) {
     reasons.push('IPA unter 4.0');
   }
-  if (ik < 4) {
+  if (ik.value < 4) {
     reasons.push('IK unter 4.0');
+  }
+  if (total.value < 4) {
+    reasons.push('Total unter 4.0');
   }
 
   ui.passBanner.textContent = reasons.length
@@ -222,28 +465,138 @@ function recalculate() {
 
   const ipa = computeIpa();
   const ik = computeIk();
-  const egk = isBmMode ? null : computeEgk();
-  const abu = isBmMode ? null : computeAbu();
+  const egk = isBmMode
+    ? { value: null, complete: false, semesters: [] }
+    : computeEgk();
+  const abu = isBmMode
+    ? {
+        value: null,
+        complete: false,
+        erfa: null,
+        soc: null,
+        lang: null,
+      }
+    : computeAbu();
   const total = computeTotal(isBmMode, ipa, ik, egk, abu);
 
-  updateResultUi(total, ipa, ik, egk, abu);
+  updateResultUi(isBmMode, total, ipa, ik, egk, abu);
+  saveState();
 }
 
 function resetAll() {
-  Object.values(fields).forEach((inputEl) => {
+  allInputs.forEach((inputEl) => {
     inputEl.value = '';
     inputEl.classList.remove('invalid');
   });
 
   ui.bmToggle.checked = false;
+  TOGGLE_GROUPS.forEach((group) => setGroupMode(group, 'detail'));
+  localStorage.removeItem(STORAGE_KEY);
   recalculate();
 }
 
-Object.values(fields).forEach((inputEl) => {
+const TOGGLE_GROUPS = ['bfs', 'uek', 'egk', 'abuSoc', 'abuLang'];
+
+function setGroupMode(group, mode) {
+  const directPanel = document.querySelector(
+    `[data-mode-panel="${group}-direct"]`,
+  );
+  const detailPanel = document.querySelector(
+    `[data-mode-panel="${group}-detail"]`,
+  );
+  const toggleBtn = document.querySelector(
+    `[data-toggle-group="${group}"]`,
+  );
+
+  if (!directPanel || !detailPanel || !toggleBtn) return;
+
+  const isDirect = mode === 'direct';
+  directPanel.classList.toggle('hidden', !isDirect);
+  detailPanel.classList.toggle('hidden', isDirect);
+  toggleBtn.querySelector('.mode-toggle-label').textContent = isDirect
+    ? 'Schnitt direkt'
+    : 'Einzelnoten';
+  toggleBtn.dataset.currentMode = mode;
+}
+
+function getGroupMode(group) {
+  const toggleBtn = document.querySelector(
+    `[data-toggle-group="${group}"]`,
+  );
+  return toggleBtn?.dataset.currentMode || 'detail';
+}
+
+document.querySelectorAll('.mode-toggle').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const group = btn.dataset.toggleGroup;
+    const current = btn.dataset.currentMode || 'detail';
+    const next = current === 'detail' ? 'direct' : 'detail';
+    setGroupMode(group, next);
+    recalculate();
+  });
+});
+
+TOGGLE_GROUPS.forEach((group) => setGroupMode(group, 'detail'));
+
+function saveState() {
+  const modes = {};
+  TOGGLE_GROUPS.forEach((group) => {
+    modes[group] = getGroupMode(group);
+  });
+
+  const state = {
+    bmMode: ui.bmToggle.checked,
+    modes,
+    inputs: allInputs.reduce((acc, inputEl) => {
+      if (inputEl.id) {
+        acc[inputEl.id] = inputEl.value;
+      }
+      return acc;
+    }, {}),
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function restoreState() {
+  const rawState = localStorage.getItem(STORAGE_KEY);
+  if (!rawState) {
+    return;
+  }
+
+  try {
+    const state = JSON.parse(rawState);
+    ui.bmToggle.checked = Boolean(state.bmMode);
+
+    if (state.modes) {
+      TOGGLE_GROUPS.forEach((group) => {
+        if (state.modes[group]) {
+          setGroupMode(group, state.modes[group]);
+        }
+      });
+    }
+
+    allInputs.forEach((inputEl) => {
+      if (!inputEl.id) {
+        return;
+      }
+
+      const storedValue = state.inputs?.[inputEl.id];
+      if (typeof storedValue === 'string') {
+        inputEl.value = storedValue;
+      }
+    });
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+allInputs.forEach((inputEl) => {
   inputEl.addEventListener('input', recalculate);
 });
 
 ui.bmToggle.addEventListener('change', recalculate);
 ui.resetBtn.addEventListener('click', resetAll);
 
+restoreState();
 recalculate();

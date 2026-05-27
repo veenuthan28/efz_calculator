@@ -1,5 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const bfsIds = Array.from({ length: 24 }, (_, index) => `bfsMod${index + 1}`);
+const uekIds = Array.from({ length: 7 }, (_, index) => `uekMod${index + 1}`);
+const egkSemesterPlan = [
+  { semester: 1, hasMath: false },
+  { semester: 2, hasMath: true },
+  { semester: 3, hasMath: true },
+  { semester: 4, hasMath: true },
+  { semester: 5, hasMath: false },
+  { semester: 6, hasMath: false },
+  { semester: 7, hasMath: false },
+];
+const abuSocIds = Array.from({ length: 7 }, (_, index) => `abuSoc${index + 1}`);
+const abuLangIds = Array.from(
+  { length: 7 },
+  (_, index) => `abuLang${index + 1}`
+);
 ---
 
 <BaseLayout>
@@ -97,37 +114,100 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </div>
           </div>
           <div class="section-body">
-            <div class="field-row">
-              <label class="field-label" for="ikBfs">
-                BFS Durchschnitt
-                <span class="field-hint">Gewichtung 80% · Erfahrungsnote auf 0.5</span>
-              </label>
-              <input
-                class="input-grade"
-                id="ikBfs"
-                type="number"
-                min="1"
-                max="6"
-                step="0.1"
-                inputmode="decimal"
-                placeholder="5.0"
-              />
+            <div class="subgrade-group" data-mode-group="bfs">
+              <div class="subgrade-head">
+                <h3>Berufsfachschule · Module</h3>
+                <span class="group-grade" id="ikBfsAvg">-</span>
+              </div>
+              <button type="button" class="mode-toggle" data-toggle-group="bfs">
+                <span class="mode-toggle-label">Einzelnoten</span>
+                <span class="mode-toggle-icon">⇄</span>
+              </button>
+              <div class="mode-direct hidden" data-mode-panel="bfs-direct">
+                <label class="override-label" for="bfsOverride">BFS-Schnitt (auf 0.5 gerundet)</label>
+                <input
+                  class="input-grade input-override"
+                  id="bfsOverride"
+                  data-override="bfs"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="z.B. 4.8"
+                />
+              </div>
+              <div class="mode-detail" data-mode-panel="bfs-detail">
+                <p class="group-hint">24 Modulnoten · Schnitt wird auf 0.5 gerundet</p>
+                <div class="subgrade-grid">
+                  {
+                    bfsIds.map((id, index) => (
+                      <label class="subgrade-item" for={id}>
+                        <span>M{index + 1}</span>
+                        <input
+                          class="input-grade input-subgrade"
+                          id={id}
+                          data-group="bfs"
+                          type="number"
+                          min="1"
+                          max="6"
+                          step="0.1"
+                          inputmode="decimal"
+                          placeholder="5.0"
+                        />
+                      </label>
+                    ))
+                  }
+                </div>
+              </div>
             </div>
-            <div class="field-row">
-              <label class="field-label" for="ikUek">
-                ÜK Durchschnitt
-                <span class="field-hint">Gewichtung 20% · Erfahrungsnote auf 0.5</span>
-              </label>
-              <input
-                class="input-grade"
-                id="ikUek"
-                type="number"
-                min="1"
-                max="6"
-                step="0.1"
-                inputmode="decimal"
-                placeholder="5.0"
-              />
+
+            <div class="subgrade-group" data-mode-group="uek">
+              <div class="subgrade-head">
+                <h3>ÜK · Module</h3>
+                <span class="group-grade" id="ikUekAvg">-</span>
+              </div>
+              <button type="button" class="mode-toggle" data-toggle-group="uek">
+                <span class="mode-toggle-label">Einzelnoten</span>
+                <span class="mode-toggle-icon">⇄</span>
+              </button>
+              <div class="mode-direct hidden" data-mode-panel="uek-direct">
+                <label class="override-label" for="uekOverride">ÜK-Schnitt (auf 0.5 gerundet)</label>
+                <input
+                  class="input-grade input-override"
+                  id="uekOverride"
+                  data-override="uek"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="z.B. 4.8"
+                />
+              </div>
+              <div class="mode-detail" data-mode-panel="uek-detail">
+                <p class="group-hint">7 ÜK-Noten · Schnitt wird auf 0.5 gerundet</p>
+                <div class="subgrade-grid">
+                  {
+                    uekIds.map((id, index) => (
+                      <label class="subgrade-item" for={id}>
+                        <span>ÜK {index + 1}</span>
+                        <input
+                          class="input-grade input-subgrade"
+                          id={id}
+                          data-group="uek"
+                          type="number"
+                          min="1"
+                          max="6"
+                          step="0.1"
+                          inputmode="decimal"
+                          placeholder="5.0"
+                        />
+                      </label>
+                    ))
+                  }
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -141,21 +221,83 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </div>
           </div>
           <div class="section-body">
-            <div class="field-row">
-              <label class="field-label" for="egkSchnitt">
-                Durchschnitt Mathe + Englisch
-                <span class="field-hint">Semesterschnitt als Erfahrungsnote · auf 0.5 gerundet</span>
-              </label>
-              <input
-                class="input-grade"
-                id="egkSchnitt"
-                type="number"
-                min="1"
-                max="6"
-                step="0.1"
-                inputmode="decimal"
-                placeholder="5.0"
-              />
+            <div class="subgrade-group" data-mode-group="egk">
+              <div class="subgrade-head">
+                <h3>Semester-Überblick</h3>
+                <span class="group-grade" id="egkLiveAvg">-</span>
+              </div>
+              <button type="button" class="mode-toggle" data-toggle-group="egk">
+                <span class="mode-toggle-label">Einzelnoten</span>
+                <span class="mode-toggle-icon">⇄</span>
+              </button>
+              <div class="mode-direct hidden" data-mode-panel="egk-direct">
+                <label class="override-label" for="egkOverride">eGK-Schnitt (auf 0.5 gerundet)</label>
+                <input
+                  class="input-grade input-override"
+                  id="egkOverride"
+                  data-override="egk"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="z.B. 4.5"
+                />
+              </div>
+              <div class="mode-detail" data-mode-panel="egk-detail">
+                <p class="group-hint">
+                  Pro Fach auf 0.5, Semesterschnitt auf 0.5, Gesamtschnitt = eGK
+                </p>
+                <div class="egk-semester-list">
+                {
+                  egkSemesterPlan.map(({ semester, hasMath }) => (
+                    <div class="egk-sem-row" data-egk-semester={semester}>
+                      <span class="egk-sem-label">Sem {semester}</span>
+
+                      <label class="subgrade-item" for={`egkSem${semester}Eng`}>
+                        <span>Eng</span>
+                        <input
+                          class="input-grade input-subgrade"
+                          id={`egkSem${semester}Eng`}
+                          data-group="egk-eng"
+                          data-semester={semester}
+                          type="number"
+                          min="1"
+                          max="6"
+                          step="0.1"
+                          inputmode="decimal"
+                          placeholder="5.0"
+                        />
+                      </label>
+
+                      {
+                        hasMath ? (
+                          <label class="subgrade-item" for={`egkSem${semester}Math`}>
+                            <span>Mathe</span>
+                            <input
+                              class="input-grade input-subgrade"
+                              id={`egkSem${semester}Math`}
+                              data-group="egk-math"
+                              data-semester={semester}
+                              type="number"
+                              min="1"
+                              max="6"
+                              step="0.1"
+                              inputmode="decimal"
+                              placeholder="5.0"
+                            />
+                          </label>
+                        ) : (
+                          <span class="egk-no-math">nur Englisch</span>
+                        )
+                      }
+
+                      <span class="summary-value egk-sem-avg" data-egk-sem-avg={semester}>-</span>
+                    </div>
+                  ))
+                }
+              </div>
+              </div>
             </div>
           </div>
         </article>
@@ -169,26 +311,114 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </div>
           </div>
           <div class="section-body">
-            <div class="field-row">
-              <label class="field-label" for="abuErfa">
-                Erfa Note
-                <span class="field-hint">Teil von (Erfa + VA + Schluss) / 3</span>
-              </label>
-              <input
-                class="input-grade"
-                id="abuErfa"
-                type="number"
-                min="1"
-                max="6"
-                step="0.1"
-                inputmode="decimal"
-                placeholder="5.0"
-              />
+            <div class="subgrade-group" data-mode-group="abuSoc">
+              <div class="subgrade-head">
+                <h3>Erfahrungsnote Gesellschaft</h3>
+                <span class="group-grade" id="abuSocAvg">-</span>
+              </div>
+              <button type="button" class="mode-toggle" data-toggle-group="abuSoc">
+                <span class="mode-toggle-label">Einzelnoten</span>
+                <span class="mode-toggle-icon">⇄</span>
+              </button>
+              <div class="mode-direct hidden" data-mode-panel="abuSoc-direct">
+                <label class="override-label" for="abuSocOverride">Gesellschaft-Schnitt (auf 0.5 gerundet)</label>
+                <input
+                  class="input-grade input-override"
+                  id="abuSocOverride"
+                  data-override="abuSoc"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="z.B. 4.5"
+                />
+              </div>
+              <div class="mode-detail" data-mode-panel="abuSoc-detail">
+                <p class="group-hint">7 Semesternoten</p>
+                <div class="subgrade-grid compact">
+                  {
+                    abuSocIds.map((id, index) => (
+                      <label class="subgrade-item" for={id}>
+                        <span>Sem {index + 1}</span>
+                        <input
+                          class="input-grade input-subgrade"
+                          id={id}
+                          data-group="abuSoc"
+                          type="number"
+                          min="1"
+                          max="6"
+                          step="0.1"
+                          inputmode="decimal"
+                          placeholder="5.0"
+                        />
+                      </label>
+                    ))
+                  }
+                </div>
+              </div>
             </div>
+
+            <div class="subgrade-group" data-mode-group="abuLang">
+              <div class="subgrade-head">
+                <h3>Erfahrungsnote Sprache und Kommunikation</h3>
+                <span class="group-grade" id="abuLangAvg">-</span>
+              </div>
+              <button type="button" class="mode-toggle" data-toggle-group="abuLang">
+                <span class="mode-toggle-label">Einzelnoten</span>
+                <span class="mode-toggle-icon">⇄</span>
+              </button>
+              <div class="mode-direct hidden" data-mode-panel="abuLang-direct">
+                <label class="override-label" for="abuLangOverride">Sprache/Komm.-Schnitt (auf 0.5 gerundet)</label>
+                <input
+                  class="input-grade input-override"
+                  id="abuLangOverride"
+                  data-override="abuLang"
+                  type="number"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="z.B. 4.5"
+                />
+              </div>
+              <div class="mode-detail" data-mode-panel="abuLang-detail">
+                <p class="group-hint">7 Semesternoten</p>
+                <div class="subgrade-grid compact">
+                  {
+                    abuLangIds.map((id, index) => (
+                      <label class="subgrade-item" for={id}>
+                        <span>Sem {index + 1}</span>
+                        <input
+                          class="input-grade input-subgrade"
+                          id={id}
+                          data-group="abuLang"
+                          type="number"
+                          min="1"
+                          max="6"
+                          step="0.1"
+                          inputmode="decimal"
+                          placeholder="5.0"
+                        />
+                      </label>
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="field-row summary-row">
+              <span class="field-label">
+                ABU Erfahrungsnote (aus beiden Bereichen)
+                <span class="field-hint">Mittelwert aus Gesellschaft und Sprache/Kommunikation</span>
+              </span>
+              <span class="summary-value" id="abuErfaAvg">-</span>
+            </div>
+
             <div class="field-row">
               <label class="field-label" for="abuVa">
                 Vertiefungsarbeit (VA)
-                <span class="field-hint">Kein Zwischenschritt gerundet</span>
+                <span class="field-hint">Wird auf 0.5 gerundet</span>
               </label>
               <input
                 class="input-grade"
@@ -204,7 +434,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <div class="field-row">
               <label class="field-label" for="abuSchluss">
                 Schlussprüfung
-                <span class="field-hint">Nur Endresultat auf 0.1 gerundet</span>
+                <span class="field-hint">Wird auf 0.5 gerundet</span>
               </label>
               <input
                 class="input-grade"
@@ -253,8 +483,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           Formel: IPA×0.4 + IK×0.3 + eGK×0.1 + ABU×0.2
         </div>
         <div class="rounding-note">
-          Rundung: IPA-, IK- und eGK-Erfahrungsnoten auf 0.5. IPA-, IK- und
-          ABU-Gesamtnote auf 0.1. Abschlussnote auf 0.1.
+          Rundung: IK-BFS/IK-ÜK auf 0.5. eGK je Fach auf 0.5, je Semester auf
+          0.5, danach Gesamtnote. ABU-Erfahrungsnote, VA und Schlussprüfung auf
+          0.5, ABU-Endnote auf 0.1. Abschlussnote auf 0.1.
         </div>
       </aside>
     </section>
